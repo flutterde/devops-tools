@@ -30,3 +30,32 @@ RustFs can be configured using environment variables. Here are some common confi
 - `RUSTFS_CONSOLE_ADDRESS`: Port address for the web console (default: 9001).
 
 
+## Use `docker compose`
+You can also use `docker compose` to run RustFs. Here is an example `docker-compose.yml` file:
+```yaml
+version: "3.8"
+
+services:
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs-server
+		restart: unless-stopped
+    ports:
+      - "9000:9000"   # S3-compatible API
+      - "9001:9001"   # Web console
+    volumes:
+      - ./data:/data   # host ./data → container /data (object storage)
+      - ./logs:/logs   # optional: host ./logs → container /logs (for logs)
+    environment:
+      # (optional) default credentials — change if you like
+      - RUSTFS_ACCESS_KEY=rustfsadmin
+      - RUSTFS_SECRET_KEY=rustfsadmin
+      - RUSTFS_CONSOLE_ENABLE=true
+    command: server /data
+    # If you want a health-check (optional)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/rustfs/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
